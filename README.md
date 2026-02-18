@@ -1,4 +1,4 @@
-### 🚀 Kubernetes CI/CD Deployment on AWS (Jenkins + Docker + Kops + Terraform)
+### 🚀 Kubernetes CI/CD Deployment on AWS (Jenkins + Docker + Terraform)
 
 ## 📌 Project Overview
 

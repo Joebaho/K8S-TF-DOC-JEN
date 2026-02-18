@@ -129,12 +129,21 @@ chmod +x kubectl
 mv kubectl /usr/local/bin/
 
 # Install Jenkins (LTS)
-wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
-apt-get update -y
-apt-get install -y fontconfig openjdk-11-jre jenkins
+apt-get update -y && apt upgrade -y
+apt install -y openjdk-17-jre wget curl gnupg2 software-properties-common ca-certificates apt-transport-https docker.io
+cd /tmp
+wget https://pkg.jenkins.io/debian-stable/binary/jenkins_2.452.3_all.deb
+dpkg -i jenkins_2.452.3_all.deb || apt-get -f install -y
 systemctl start jenkins
 systemctl enable jenkins
+usermod -aG docker jenkins
+systemctl restart jenkins
+# Optional: Allow port 8080 if UFW is active
+if command -v ufw > /dev/null; then
+    ufw allow 8080
+fi
+
+echo "Jenkins installation completed successfully."
 
 # Install git and other useful tools
 apt-get install -y git curl wget
