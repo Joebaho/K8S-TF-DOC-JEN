@@ -114,13 +114,15 @@ GitHub Webhooks
 
 ## ⚙️ Infrastructure Setup
 
-1️⃣ Make sure you install Required Tools
+1️⃣ Make sure you install Required Tools on the local machine 
 
 AWS CLI
 
 kubectl
 
 terraform
+
+Docker
 
 2️⃣ Build Infranstructure ( VPC and EKS cluster)
 
