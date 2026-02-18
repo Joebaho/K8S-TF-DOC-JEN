@@ -64,6 +64,9 @@ K8S-TF-DOC-JEN/
 │   ├── requirements.txt 
 │   └── main.py
 │ 
+├── images/
+│   └── architecture.png
+│
 ├── jenkins-server/
 │   ├── deploy-jenkins-server.sh
 │   └── destroy-jenkins-server.sh
