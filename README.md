@@ -60,9 +60,9 @@ K8S-TF-DOC-JEN/
 │   ├── requirements.txt 
 │   └── main.py
 │ 
-├── jenkins/
-│   ├── Destroy-Jenkinsfile
-│   └── Jenkinsfile
+├── jenkins-server/
+│   ├── deploy-jenkins-server.sh
+│   └── destroy-jenkins-server.sh
 │ 
 ├── K8S/
 │   ├── deployment.yaml
@@ -80,13 +80,17 @@ K8S-TF-DOC-JEN/
 │       └── variables.tf
 │
 │--- .gitignore
+│
+│--- Jenkinsfile
+│
+│--- Jenkinsfile.destroy
 |
 └── README.md
 ```
 
 ## Flow:
 
-Code pushed to GitHub
+Launch jenkins server
 
 Jenkins pipeline triggered via webhook
 
@@ -99,6 +103,8 @@ Application exposed via AWS LoadBalancer
 ## 🛠 Technologies Used
 
 Python FastAPI
+
+Bashscripting 
 
 Docker
 
@@ -118,24 +124,39 @@ GitHub Webhooks
 
 ## ⚙️ Infrastructure Setup
 
-I - Make sure you install Required Tools on the local machine 
+1. Prepare Your Local Machine
 
-AWS CLI
+Ensure you have Terraform installed locally (≥1.0).
 
-kubectl
+Configure AWS credentials via environment variables or ~/.aws/credentials.
 
-terraform
+Have an EC2 key pair in the same region you'll use. If you don't have one, create it in the AWS Console (EC2 → Key Pairs) and download the .pem file.
 
-Docker
+2. Create the Jenkins Server
 
-II - CLone the repository 
+```bash
+cd K8S-TF-DOC-JEN/jenkins-server
+chmod +x deploy-jenkins-server.sh
+./deploy-jenkins-server.sh
+```
 
-```bash 
+3. SSH into the Jenkins Server
+Use the key pair you specified:
+
+```bash
+ssh -i /path/to/your-key.pem ubuntu@<jenkins_public_ip>
+```
+
+Once logged in, you are on the fresh Ubuntu server with all tools installed.
+
+4. Clone Your Project Repository on the Server
+
+```bash
 git clone https://github.com/Joebaho/K8S-TF-DOC-JEN.git
 cd K8S-TF-DOC-JEN
 ```
 
-III - Build Infranstructure ( VPC and EKS cluster)
+5. Build Infranstructure ( VPC and EKS cluster)
 
 ```bash
 cd scripts
@@ -143,21 +164,21 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-IV - 🐳 Manual Docker Image Build & push (Until Jenkins is automated)
+6. 🐳 Manual Docker Image Build & push (Until Jenkins is automated)
 
 ```bash
 docker build -t yourdockerhubusername/fastapi-app .
 docker push yourdockerhubusername/fastapi-app:latest
 ```
 
-V - ☸️ Kubernetes Deployment(Manual):
+7. ☸️ Kubernetes Deployment(Manual):
 
 ```bash
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
-VI - Get Application Access:
+8. Get Application Access:
 
 ```bash
 kubectl get svc -w
@@ -207,14 +228,24 @@ Ensure your Jenkins agent has the following tools installed and available in PAT
 
 Webhook triggers automatic deployment on every commit.
 
-## Destruction
+## 🧹 Clean Up When Done
 
-To get ride of all the entire infrastructure and mostly to avoid being charged we can destroy the project with the bashscript command.
+To avoid incurring costs, destroy both the Jenkins server and the EKS cluster:
+
+Destroy the EKS cluster (from the Jenkins server or your local machine):
 
 ```bash
-cd scripts
-chmod +x destroy.sh
+cd ~/K8S-TF-DOC-JEN/scripts
+export AUTO_DESTROY=true
 ./destroy.sh
+```
+
+Destroy the Jenkins server (from your local machine):
+
+```bash
+cd K8S-TF-DOC-JEN/jenkins-server
+chmod +x destroy-jenkins-server.sh
+./destroy-jenkins-server.sh
 ```
 
 ## 🏁 Conclusion
@@ -247,3 +278,4 @@ This project is a simple and practical way to understand how Terraform manages *
 ## 📄 License
 
 This project is open-source and available under the **MIT License**.
+Docker
