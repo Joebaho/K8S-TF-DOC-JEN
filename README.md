@@ -167,17 +167,43 @@ Wait for the LoadBalancer EXTERNAL-IP to appear and note it. Access via LoadBala
 
 ## 🔁 Jenkins Pipeline
 
-Pipeline stages:
+1 - Install required plugins:
 
-1.Clone GitHub repo
+* Pipeline
 
-2.Build Docker image
+* Git
 
-3.Push to DockerHub
+* Credentials Binding
 
-4.Deploy to Kubernetes
+* Docker Pipeline, AWS Steps
 
-5.Rollout restart
+2 - Add Docker credentials in Jenkins:
+
+* dockerhub-username (type: "Secret text") – your Docker Hub username.
+
+* dockerhub-password (type: "Secret text") – your Docker Hub password/token.
+
+* aws-access-key-id and aws-secret-access-key (both "Secret text") – your AWS credentials.
+
+3 - Create a new Pipeline job:
+
+* Select Pipeline script from SCM.
+
+* Set Git repository URL to https://github.com/Joebaho/K8S-TF-DOC-JEN.git.
+
+* Set script path to Jenkinsfile 
+
+* Save and run.
+
+Ensure your Jenkins agent has the following tools installed and available in PATH:
+
+* terraform
+
+* kubectl
+
+* aws CLI
+
+* docker (and the Docker daemon must be running, or use a Docker agent)
 
 Webhook triggers automatic deployment on every commit.
 
