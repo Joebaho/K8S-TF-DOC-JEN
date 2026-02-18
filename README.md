@@ -114,7 +114,7 @@ GitHub Webhooks
 
 ## ⚙️ Infrastructure Setup
 
-1️⃣ Make sure you install Required Tools on the local machine 
+I - Make sure you install Required Tools on the local machine 
 
 AWS CLI
 
@@ -124,7 +124,14 @@ terraform
 
 Docker
 
-2️⃣ Build Infranstructure ( VPC and EKS cluster)
+II - CLone the repository 
+
+```bash 
+git clone https://github.com/Joebaho/K8S-TF-DOC-JEN.git
+cd K8S-TF-DOC-JEN
+```
+
+III - Build Infranstructure ( VPC and EKS cluster)
 
 ```bash
 cd scripts
@@ -132,29 +139,27 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-3️⃣ 🐳 Docker Image Build
+IV - 🐳 Manual Docker Image Build & push (Until Jenkins is automated)
 
 ```bash
 docker build -t yourdockerhubusername/fastapi-app .
 docker push yourdockerhubusername/fastapi-app:latest
 ```
 
-
-
-4️⃣ ☸️ Kubernetes Deployment
+V - ☸️ Kubernetes Deployment(Manual):
 
 ```bash
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 ```
 
-4️⃣ Get service:
+VI - Get Application Access:
 
 ```bash
-kubectl get svc
+kubectl get svc -w
 ```
 
-Access via LoadBalancer external IP.
+Wait for the LoadBalancer EXTERNAL-IP to appear and note it. Access via LoadBalancer external IP.
 
 ## 🔁 Jenkins Pipeline
 

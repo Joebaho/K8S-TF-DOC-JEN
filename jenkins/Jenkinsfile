@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+
+    environment {
+        // Credentials – set these in Jenkins
+        DOCKER_USERNAME = credentials('dockerhub-username')   // actually just the username
+        DOCKER_PASSWORD = credentials('dockerhub-password')
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        AWS_DEFAULT_REGION    = 'us-west-2'   // or use a credential parameter
+
+        // Pass through to Terraform as TF_VAR_*
+        TF_VAR_dockerhub_username = "${DOCKER_USERNAME}"
+        TF_VAR_region              = "${AWS_DEFAULT_REGION}"
+        TF_VAR_cluster_name         = 'automated-demo-cluster'   // change as needed
+        TF_VAR_environment          = 'dev'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Joebaho/K8S-TF-DOC-JEN.git'
+            }
+        }
+
+        stage('Run Full Deployment') {
+            steps {
+                // Switch to the scripts directory and execute deploy.sh
+                dir('scripts') {
+                    sh '''
+                        chmod +x deploy.sh
+                        ./deploy.sh
+                    '''
+                }
+            }
+        }
+
+        stage('Output Service URL') {
+            steps {
+                dir('scripts') {
+                    sh '''
+                        # The URL is already printed by deploy.sh, but we can capture it if needed
+                        echo "Deployment completed. Check the logs above for the LoadBalancer URL."
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up workspace if desired
+            cleanWs()
+        }
+    }
+}
