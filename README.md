@@ -49,6 +49,10 @@ Container lifecycle management
 
 Cloud architecture automation
 
+## 📐 Architecture
+
+![Architecture Diagram](images/architecture.png)
+
 ## 📂 Repository Structure
 
 ```bash
