@@ -1,4 +1,4 @@
-### 🚀 Kubernetes CI/CD Deployment on AWS (Jenkins + Docker + Terraform)
+### 🚀 Kubernetes CI/CD Deployment on AWS (GithubAction + Docker + Terraform)
 
 ## 📌 Project Overview
 
@@ -16,11 +16,11 @@ Kubernetes (Container Orchestration)
 
 Terraform (Infrastructure as Code)
 
-AWS EC2 + S3
+Github Action 
 
 ## 🎯 Key Features
 
-Fully automated CI/CD
+Fully automated CI/CD with Github Actionn
 
 Infrastructure as Code
 
@@ -123,11 +123,17 @@ cd K8S-TF-DOC-JEN
 In GitHub → Repo → Settings → Secrets → Actions, add:
 
 **Secret**	                      **Purpose**
+
 AWS_ACCESS_KEY_ID	          Terraform + AWS
+
 AWS_SECRET_ACCESS_KEY	      Terraform + AWS
+
 AWS_REGION	                  e.g. us-west-2
+
 DOCKERHUB_USERNAME	          Push images
+
 DOCKERHUB_TOKEN	              Push images
+
 KUBE_CONFIG_DATA	          Deploy to cluster
 
 ⚠️ KUBE_CONFIG_DATA is added after Terraform creates the cluster
