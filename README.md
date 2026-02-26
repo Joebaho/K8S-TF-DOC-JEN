@@ -8,15 +8,11 @@ It integrates:
 
 GitHub (Source Control)
 
-Jenkins (CI/CD Automation)
-
 Docker (Containerization)
 
 DockerHub (Image Registry)
 
 Kubernetes (Container Orchestration)
-
-Kops (Kubernetes Cluster Provisioning)
 
 Terraform (Infrastructure as Code)
 
@@ -67,17 +63,14 @@ K8S-TF-DOC-JEN/
 ├── images/
 │   └── architecture.png
 │
-├── jenkins-server/
-│   ├── deploy-jenkins-server.sh
-│   └── destroy-jenkins-server.sh
+├── .github/workflows/
+│   ├── app.yml
+│   └── infra.yml
 │ 
 ├── K8S/
 │   ├── deployment.yaml
 │   └── service.yaml
 │ 
-├── scripts/
-│   ├── deploy.sh
-|   └── destroy.sh 
 │           
 ├── terraform/
 |       |-- main.tf 
@@ -88,18 +81,15 @@ K8S-TF-DOC-JEN/
 │
 │--- .gitignore
 │
-│--- Jenkinsfile
-│
-│--- Jenkinsfile.destroy
 |
 └── README.md
 ```
 
 ## Flow:
 
-Launch jenkins server
+Terraform provision infrastructure
 
-Jenkins pipeline triggered via webhook
+Github Actions deploys the App
 
 Docker image built and pushed to DockerHub
 
@@ -111,153 +101,165 @@ Application exposed via AWS LoadBalancer
 
 Python FastAPI
 
-Bashscripting 
-
 Docker
 
 Kubernetes
 
-Kops
-
 Terraform
-
-Jenkins
-
-AWS EC2
 
 DockerHub
 
-GitHub Webhooks
+GitHub Actions
 
-## ⚙️ Infrastructure Setup
-
-1. Prepare Your Local Machine
-
-Ensure you have Terraform installed locally (≥1.0).
-
-Configure AWS credentials via environment variables or ~/.aws/credentials.
-
-Have an EC2 key pair in the same region you'll use. If you don't have one, create it in the AWS Console (EC2 → Key Pairs) and download the .pem file.
-
-2. Create the Jenkins Server
-
-```bash
-cd K8S-TF-DOC-JEN/jenkins-server
-chmod +x deploy-jenkins-server.sh
-./deploy-jenkins-server.sh
-```
-
-3. SSH into the Jenkins Server
-Use the key pair you specified:
-
-```bash
-ssh -i /path/to/your-key.pem ubuntu@<jenkins_public_ip>
-```
-
-Once logged in, you are on the fresh Ubuntu server with all tools installed.
-
-4. Clone Your Project Repository on the Server
+## Clone Your Project Repository on the Server
 
 ```bash
 git clone https://github.com/Joebaho/K8S-TF-DOC-JEN.git
 cd K8S-TF-DOC-JEN
 ```
 
-5. Build Infranstructure ( VPC and EKS cluster)
+## 🔐 PREPARE SECRETS (ONCE)
+
+In GitHub → Repo → Settings → Secrets → Actions, add:
+
+**Secret**	                      **Purpose**
+AWS_ACCESS_KEY_ID	          Terraform + AWS
+AWS_SECRET_ACCESS_KEY	      Terraform + AWS
+AWS_REGION	                  e.g. us-west-2
+DOCKERHUB_USERNAME	          Push images
+DOCKERHUB_TOKEN	              Push images
+KUBE_CONFIG_DATA	          Deploy to cluster
+
+⚠️ KUBE_CONFIG_DATA is added after Terraform creates the cluster
+
+## ⚙️ Infrastructure Setup
+
+▶️ How to run it
+
+Go to GitHub → Actions
+
+Select Infrastructure (Terraform)
+
+Click Run workflow
+
+Wait for completion
+
+✅ This creates:
+
+VPC
+
+EKS cluster
+
+Worker nodes
+
+## 🔑GENERATE KUBECONFIG (CRITICAL STEP)
+
+On your local machine:
 
 ```bash
-cd scripts
-chmod +x deploy.sh
-./deploy.sh
+aws eks update-kubeconfig \
+  --region us-west-2 \
+  --name <your-cluster-name>
 ```
 
-6. 🐳 Manual Docker Image Build & push (Until Jenkins is automated)
+Verify access:
 
 ```bash
-docker build -t yourdockerhubusername/fastapi-app .
-docker push yourdockerhubusername/fastapi-app:latest
+kubectl get nodes
 ```
 
-7. ☸️ Kubernetes Deployment(Manual):
+Now encode kubeconfig:
 
 ```bash
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+cat ~/.kube/config | base64
 ```
 
-8. Get Application Access:
+
+Copy the output and save it in GitHub as:
+
+KUBE_CONFIG_DATA
+
+✅ Now GitHub Actions can access your cluster
+
+## 🚢CONFIGURE KUBERNETES MANIFESTS
+
+k8s/deployment.yaml
+
+Make sure names match workflow:
 
 ```bash
-kubectl get svc -w
+metadata:
+  name: fastapi-deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: fastapi-container
+          image: yourdockerhubusername/fastapi-app:latest
 ```
 
-Wait for the LoadBalancer EXTERNAL-IP to appear and note it. Access via LoadBalancer external IP.
+## 🔁APP CI/CD PIPELINE
 
-## 🔁 Jenkins Pipeline
+Set up the File and safe: .github/workflows/app.yml
 
-1 - Install required plugins:
+## ▶️DEPLOY THE APP
 
-* Pipeline
-
-* Git
-
-* Credentials Binding
-
-* Docker Pipeline, AWS Steps
-
-2 - Add Docker credentials in Jenkins:
-
-* dockerhub-username (type: "Secret text") – your Docker Hub username.
-
-* dockerhub-password (type: "Secret text") – your Docker Hub password/token.
-
-* aws-access-key-id and aws-secret-access-key (both "Secret text") – your AWS credentials.
-
-3 - Create a new Pipeline job:
-
-* Select Pipeline script from SCM.
-
-* Set Git repository URL to https://github.com/Joebaho/K8S-TF-DOC-JEN.git.
-
-* Set script path to Jenkinsfile 
-
-* Save and run.
-
-Ensure your Jenkins agent has the following tools installed and available in PATH:
-
-* terraform
-
-* kubectl
-
-* aws CLI
-
-* docker (and the Docker daemon must be running, or use a Docker agent)
-
-Webhook triggers automatic deployment on every commit.
-
-## 🧹 Clean Up When Done
-
-To avoid incurring costs, destroy both the Jenkins server and the EKS cluster:
-
-Destroy the EKS cluster (from the Jenkins server or your local machine):
+Now simply:
 
 ```bash
-cd ~/K8S-TF-DOC-JEN/scripts
-export AUTO_DESTROY=true
-./destroy.sh
+git add .
+git commit -m "deploy app"
+git push origin main
 ```
 
-Destroy the Jenkins server (from your local machine):
+GitHub Actions will:
+
+Build Docker image
+
+Push to Docker Hub
+
+Deploy to EKS
+
+Roll out the update
+
+
+## 🌐ACCESS YOUR APPLICATION
 
 ```bash
-cd K8S-TF-DOC-JEN/jenkins-server
-chmod +x destroy-jenkins-server.sh
-./destroy-jenkins-server.sh
+kubectl get svc
+```
+
+Look for:
+
+```bash
+EXTERNAL-IP
+```
+
+Open in browser:
+
+```bash
+http://<external-ip>
+```
+
+🎉 Your app is running
+
+## UPDATES & CLEANUP
+
+Update app
+
+```bash
+git push origin main
+```
+
+Destroy infrastructure (manual & safe)
+
+```bash
+terraform destroy
 ```
 
 ## 🏁 Conclusion
 
-This project is a simple and practical way to understand how Terraform manages **infrastructures deployments**. Then we can build an image with **Docker** and finally ensure the automation with CI/CD pipeline. 
+This project is a simple and practical way to understand how Terraform manages **infrastructures deployments**. Then we can build an image with **Docker** and finally ensure the automation with CI/CD pipeline using GithubAction. 
 
 ---
 
