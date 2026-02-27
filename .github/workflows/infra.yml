@@ -6,6 +6,11 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_region: us-west-2
+      TF_VAR_cluster_name: automated-demo-cluster
+      TF_VAR_environment: production
+      TF_VAR_dockerhub_username: joebaho2
     permissions:
       contents: read
 
