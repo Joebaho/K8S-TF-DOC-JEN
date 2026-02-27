@@ -21,20 +21,20 @@ spec:
     spec:
       containers:
         - name: fastapi-container
-          image: yourdockerhubusername/fastapi-app:latest
+          image: joebaho2/fastapi-app:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 80
           readinessProbe:
             httpGet:
               path: /
-              port: 8000
+              port: 80
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: 8000
+              port: 80
             initialDelaySeconds: 15
             periodSeconds: 20
           resources:

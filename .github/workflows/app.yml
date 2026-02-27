@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: joebaho2/fastapi-app
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/fastapi-app
 
 jobs:
   deploy:
@@ -14,6 +14,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
 
       - name: Docker Login
         uses: docker/login-action@v2
@@ -24,8 +27,12 @@ jobs:
       - name: Build & Push Image
         uses: docker/build-push-action@v4
         with:
+          context: ./app
+          file: ./app/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.IMAGE_NAME }}:latest
 
       - name: Configure kubeconfig
         run: |
@@ -34,4 +41,5 @@ jobs:
       - name: Deploy to K8s
         run: |
           kubectl --kubeconfig=kubeconfig apply -f k8s/
-          kubectl rollout status deployment/fastapi-deployment
+          kubectl --kubeconfig=kubeconfig set image deployment/fastapi-deployment fastapi-container=${{ env.IMAGE_NAME }}:${{ github.sha }}
+          kubectl --kubeconfig=kubeconfig rollout status deployment/fastapi-deployment
