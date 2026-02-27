@@ -1,0 +1,41 @@
+name: Destroy Infrastructure (Terraform)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: "Type DESTROY to confirm infrastructure deletion"
+        required: true
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+
+    # Same variables as apply workflow
+    env:
+      TF_VAR_region: us-west-2
+      TF_VAR_cluster_name: k8s-demo-cluster
+      TF_VAR_environment: dev
+      TF_VAR_dockerhub_username: joebaho
+
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
+            echo "❌ Destruction not confirmed. Type DESTROY exactly."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: terraform
+        run: terraform destroy -auto-approve -input=false
