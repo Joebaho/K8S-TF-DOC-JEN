@@ -14,9 +14,9 @@ jobs:
     # Same variables as apply workflow
     env:
       TF_VAR_region: us-west-2
-      TF_VAR_cluster_name: k8s-demo-cluster
-      TF_VAR_environment: dev
-      TF_VAR_dockerhub_username: joebaho
+      TF_VAR_cluster_name: automated-demo-cluster
+      TF_VAR_environment: production
+      TF_VAR_dockerhub_username: joebaho2
 
     steps:
       - name: Validate confirmation
